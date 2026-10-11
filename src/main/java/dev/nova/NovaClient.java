@@ -1,3 +1,5 @@
+package com.example.client;
+
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
@@ -6,13 +8,17 @@ import net.minecraft.client.util.InputUtil;
 import org.lwjgl.glfw.GLFW;
 
 public class CustomClientMod implements ClientModInitializer {
-    public static boolean espEnabled = true;
+
+    // Feature toggles
     public static boolean autoAttackEnabled = false;
+    public static boolean espEnabled = true;
+
+    // Keybindings
     private static KeyBinding menuKeyBind;
 
     @Override
     public void onInitializeClient() {
-        // Register a keybind to open the GUI menu (e.g., Right Shift)
+        // Register keybind for opening the GUI menu (Default: Right Shift)
         menuKeyBind = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.customclient.menu",
                 InputUtil.Type.KEYSYM,
@@ -20,19 +26,22 @@ public class CustomClientMod implements ClientModInitializer {
                 "category.customclient.main"
         ));
 
-        // Handle tick events for modules
+        // Register client tick listener
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (client.player == null) return;
 
-            // Check if menu key is pressed
+            // Check if the menu key was pressed
             while (menuKeyBind.wasPressed()) {
-                // Open your custom GUI Screen here
-                // client.setScreen(new CustomMenuScreen());
+                // Code to open your GUI Screen goes here
+                // client.setScreen(new CustomClientScreen());
             }
 
-            // Run Auto Attack logic if toggled
+            // Example Auto Attack logic hook
             if (autoAttackEnabled) {
-                // Implement attack tick check
+                if (client.targetedEntity != null && client.player.getAttackCooldownProgress(0.5f) >= 1.0f) {
+                    client.interactionManager.attackEntity(client.player, client.targetedEntity);
+                    client.player.swingHand(net.minecraft.util.Hand.MAIN_HAND);
+                }
             }
         });
     }
