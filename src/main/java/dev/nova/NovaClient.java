@@ -1,41 +1,38 @@
-package dev.nova;
-
-import com.mojang.blaze3d.platform.InputConstants;
-import dev.nova.gui.ClickGuiScreen;
-import dev.nova.module.ModuleManager;
-import dev.nova.module.modules.EntityESP;
-import dev.nova.module.modules.Freecam;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
-import net.minecraft.client.KeyMapping;
-import net.minecraft.client.Minecraft;
-import net.minecraft.resources.Identifier;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.util.InputUtil;
 import org.lwjgl.glfw.GLFW;
 
-public class NovaClient implements ClientModInitializer {
-    public static final String MOD_ID = "novaclient";
-    private static final ModuleManager MODULES = new ModuleManager();
-    public static KeyMapping.Category CATEGORY;
-    private static KeyMapping guiKey;
-
-    public static ModuleManager modules() { return MODULES; }
+public class CustomClientMod implements ClientModInitializer {
+    public static boolean espEnabled = true;
+    public static boolean autoAttackEnabled = false;
+    private static KeyBinding menuKeyBind;
 
     @Override
     public void onInitializeClient() {
-        CATEGORY = KeyMapping.Category.register(Identifier.fromNamespaceAndPath(MOD_ID, "main"));
+        // Register a keybind to open the GUI menu (e.g., Right Shift)
+        menuKeyBind = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.customclient.menu",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_RIGHT_SHIFT,
+                "category.customclient.main"
+        ));
 
-        guiKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
-                "key.novaclient.gui", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT_SHIFT, CATEGORY));
-
-        // ---- Register modules here. One line per module. ----
-        MODULES.register(new Freecam(GLFW.GLFW_KEY_F6));
-        MODULES.register(new EntityESP(GLFW.GLFW_KEY_G));
-
+        // Handle tick events for modules
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            MODULES.tick(client);
-            while (guiKey.consumeClick()) {
-                Minecraft.getInstance().setScreen(new ClickGuiScreen());
+            if (client.player == null) return;
+
+            // Check if menu key is pressed
+            while (menuKeyBind.wasPressed()) {
+                // Open your custom GUI Screen here
+                // client.setScreen(new CustomMenuScreen());
+            }
+
+            // Run Auto Attack logic if toggled
+            if (autoAttackEnabled) {
+                // Implement attack tick check
             }
         });
     }
